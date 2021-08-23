@@ -16,6 +16,8 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# organizations profile name
+org_profile=${ORG_PROFILE:-default}
 
 while getopts ":r:f:e:" opt; do
     case ${opt} in
@@ -40,12 +42,12 @@ if [ ! -f "$FILETOEXEC" ] || [[ ${#FILETOEXEC} -lt 2 ]] ## Make sure the file na
     exit 1 ## and exit with a non success (non-zero) exit code
 fi
 ROLESESSIONNAME=`aws sts get-caller-identity --output json 2> /dev/null| jq -r '.UserId' 2> /dev/null`  ##Get the current UserID to use in Role Session Name on STS-Assume Role
-ROLESESSIONNAMEREGEX="^[A-Za-z0-9\_\+\=\,\.\@\-]{2,64}$" ## Regex pattern for a properly formatted Role Session Name
-if [[ ! $ROLESESSIONNAME =~ $ROLESESSIONNAMEREGEX ]] ## If the Role session name does not fit the regex pattern
-    then printf "We failed to get the current UserID or it did not meet the requirements to use in Role Session Name in STS Assume Role.\n" ## Print an error
-    exit 1 ## and exit with a non success (non-zero) exit code
-fi
-for account in `aws organizations list-accounts --query 'Accounts[?Status==\`ACTIVE\`]' --region us-east-1 --output json 2> /dev/null | jq -r '.[] .Id' 2> /dev/null`  ## Get all active accounts in the organization
+ROLESESSIONNAMEREGEX="^[A-Za-z0-9\_\+\=\,\.\@\-\:]+$" ## Regex pattern for a properly formatted Role Session Name
+#if [[ ! $ROLESESSIONNAME =~ $ROLESESSIONNAMEREGEX ]] ## If the Role session name does not fit the regex pattern
+#    then printf "We failed to get the current UserID or it did not meet the requirements to use in Role Session Name in STS Assume Role.\n" ## Print an error
+#    exit 1 ## and exit with a non success (non-zero) exit code
+#fi
+for account in `AWS_PROFILE=${org_profile} aws organizations list-accounts --query 'Accounts[?Status==\`ACTIVE\`]' --region us-east-1 --output json 2> /dev/null | jq -r '.[] .Id' 2> /dev/null`  ## Get all active accounts in the organization
     do
     printf "\n# -------------------------------------------------------------------------\nRunning commands against account: $account\n# -------------------------------------------------------------------------\n"
     ROLEARN="arn:aws:iam::$account:role/$ROLENAME"  ##Based on the input role name and current account, compile the ARN
