@@ -317,7 +317,7 @@ do
     printf "Searching for OpsWorks stacks with resources in EC2-Classic..."
     [[ $header == 0 ]] || echo "profile,region,StackId" >> Classic_OpsWorks_Stacks.csv
     aws opsworks describe-stacks --query 'Stacks[?VpcId==`null`]' --region $region --output json 2>> errors.txt \
-    | jq -r --arg profile "$profile" --arg region ",$region" '.[] | [$profile, $region, .StackId] | @csv' >> Classic_OpsWorks_Stacks.csv ## Get all OpsWorks Stacks in EC2-Classic and output them with their corresponding region to a CSV
+    | jq -r --arg profile "$profile" --arg region "$region" '.[] | [$profile, $region, .StackId] | @csv' >> Classic_OpsWorks_Stacks.csv ## Get all OpsWorks Stacks in EC2-Classic and output them with their corresponding region to a CSV
     printf "Done \xe2\x9c\x85 \n"
 
     ## Unset all the variables we used within the region loop
